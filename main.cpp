@@ -25,6 +25,10 @@ int main(int argc, char *argv[]) {
 	if (argc > 2) {
 		acZlibber* zlibber = new acZlibber;
 
+		FILE* input;
+		FILE* output;
+		bool inited = false;
+
 		string cmd = ToString(argv[1]);
 		string filename = ToString(argv[2]);
 
@@ -34,14 +38,17 @@ int main(int argc, char *argv[]) {
 			if (fileExists(filename.c_str())) {
 				cout << "Unpacking..." << endl;
 
-				FILE* input  = fopen(ToString(filename).c_str(), "r");
-				FILE* output = fopen(ToString(filename + ".out").c_str(), "w");
+				input  = fopen(ToString(filename).c_str(), "r");
+				output = fopen(ToString(filename + ".out").c_str(), "w");
+
+				SET_BINARY_MODE(input);
+				SET_BINARY_MODE(output);
+
+				inited = true;
 
 				string err = zlibber->getLastError( zlibber->unpack(input, output) );
 				if (!err.empty()) cout << err << endl;
 
-				fclose(output);
-				fclose(input);
 
 				cout << "Finished in " << ( time( NULL ) - startTime ) << " seconds." << endl;
 			} else cout << filename << " isn't exists." << endl;
@@ -49,18 +56,26 @@ int main(int argc, char *argv[]) {
 			if (fileExists(filename.c_str())) {
 				cout << "Packing" << filename << "..." << endl;
 
-				FILE* input  = fopen(ToString(filename).c_str(), "r");
-				FILE* output = fopen(ToString(filename + ".zlb").c_str(), "w");
+				input  = fopen(ToString(filename).c_str(), "r");
+				output = fopen(ToString(filename + ".zlb").c_str(), "w");
+
+				SET_BINARY_MODE(input);
+				SET_BINARY_MODE(output);
+
+				inited = true;
 
 				string err = zlibber->getLastError( zlibber->pack(input, output, 9) );
 				if (!err.empty()) cout << err << endl;
 
-				fclose(output);
-				fclose(input);
-
 				cout << "Finished in " << ( time( NULL ) - startTime ) << " seconds." << endl;
 			} else cout << filename << " isn't exists." << endl;
 		}
+
+		if(inited) {
+			fclose(output);
+			fclose(input);
+		}
+
 		delete zlibber;
 	} else {
 		cout << "Usage: " << argv[0] << " <command> <filename>\n" <<
